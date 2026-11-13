@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="QUIZORA – Challenge Your Mind. Discover Your Potential. A smart quiz app built with HTML, CSS and Vanilla JavaScript.">
+<meta name="theme-color" content="#0B1020">
+<title>QUIZORA – Challenge Your Mind. Discover Your Potential.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230B1020'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23A78BFA' stroke-width='3' stroke-dasharray='48 10' transform='rotate(62 16 16)'/%3E%3Cpath d='M21 21l5 5' stroke='%2322D3EE' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* QUIZORA – midnight navy, violet & cyan glass UI */
+@property --pct { syntax: '<number>'; inherits: false; initial-value: 0; }
+:root {
+  --navy: #0B1020; --purple: #7C3AED; --violet: #A78BFA; --cyan: #22D3EE; --white: #F8FAFC;
+  --bg: #0B1020; --text: #F8FAFC; --muted: #A9B4D0; --link: #22D3EE; --tint: #A78BFA;
+  --glass: rgba(255,255,255,.055); --glass-2: rgba(255,255,255,.09); --border: rgba(167,139,250,.2);
+  --ok: #34D399; --ok-bg: rgba(52,211,153,.13); --bad: #FB7185; --bad-bg: rgba(251,113,133,.13); --warn: #FBBF24;
+  --shadow: 0 22px 50px rgba(3,6,20,.45); --fx: 1; --radius: 22px;
+  --display: "Sora", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --bg: #EEF0FC; --text: #12163A; --muted: #4A5378; --link: #0E7490; --tint: #6D28D9;
+  --glass: rgba(255,255,255,.72); --glass-2: rgba(255,255,255,.95); --border: rgba(124,58,237,.22);
+  --ok: #0B8A5F; --bad: #C72D49; --warn: #A16207; --shadow: 0 22px 50px rgba(70,55,150,.15); --fx: .5;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; font-family: var(--body); color: var(--text); background: var(--bg); line-height: 1.6; transition: background .4s, color .3s; overflow-x: hidden; }
+h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: -.02em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+.container { width: min(1120px, 100% - 2rem); margin-inline: auto; }
+main { flex: 1; padding: 2.2rem 0 3.5rem; }
+.muted { color: var(--muted); }
+.ico { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ---------- Animated background ---------- */
+.bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; opacity: var(--fx); }
+.aurora::before, .aurora::after { content: ""; position: absolute; width: 62vmax; height: 62vmax; border-radius: 50%; filter: blur(90px); }
+.aurora::before { background: radial-gradient(circle, var(--purple), transparent 66%); top: -28vmax; left: -18vmax; opacity: .5; animation: driftA 24s ease-in-out infinite alternate; }
+.aurora::after { background: radial-gradient(circle, var(--cyan), transparent 66%); right: -24vmax; bottom: -34vmax; opacity: .3; animation: driftB 28s ease-in-out infinite alternate; }
+.bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(167,139,250,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(167,139,250,.07) 1px, transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 10%, transparent 70%); mask-image: radial-gradient(ellipse at 50% 30%, #000 10%, transparent 70%); }
+.bg-shapes { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--violet); stroke-width: 1; opacity: .22; }
+.bg-shapes .spin { transform-box: fill-box; transform-origin: center; animation: spin 80s linear infinite; }
+.bg-shapes .spin.rev { animation-direction: reverse; animation-duration: 110s; }
+.symbols span { position: absolute; font-family: ui-monospace, "JetBrains Mono", Consolas, monospace; color: var(--violet); opacity: .07; animation: floaty ease-in-out infinite; }
+#particles { position: absolute; inset: 0; width: 100%; height: 100%; }
+@keyframes driftA { to { transform: translate(14vmax, 10vmax) scale(1.1); } }
+@keyframes driftB { to { transform: translate(-12vmax, -10vmax) scale(1.15); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes floaty { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-34px) rotate(5deg); } }
+
+/* ---------- Glass primitives ---------- */
+.glass { position: relative; background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%); box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.07); }
+.glow::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(167,139,250,.75), transparent 42%, rgba(34,211,238,.6)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); opacity: .5; transition: opacity .3s; pointer-events: none; }
+.glow:hover::before, .glow:focus-visible::before { opacity: 1; }
+.btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: .6rem; border: 1px solid transparent; border-radius: 14px; padding: .85rem 1.5rem; font-weight: 700; transition: transform .2s, box-shadow .25s, background .2s; }
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { color: #fff; background: linear-gradient(135deg, #7C3AED, #8B5CF6 55%, #6D4AE8); box-shadow: 0 10px 28px rgba(124,58,237,.45), 0 0 0 1px rgba(167,139,250,.5) inset; }
+.btn-primary::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%); transform: translateX(-120%); transition: transform .6s; }
+.btn-primary:hover:not(:disabled)::after { transform: translateX(120%); }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 14px 36px rgba(124,58,237,.6), 0 0 22px rgba(34,211,238,.35); }
+.btn-ghost { background: var(--glass); border-color: var(--border); backdrop-filter: blur(10px); }
+.btn-ghost:hover:not(:disabled) { background: var(--glass-2); border-color: var(--cyan); }
+.btn-danger { background: var(--bad-bg); color: var(--bad); border-color: rgba(251,113,133,.3); }
+.icon-btn { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: var(--glass); border: 1px solid var(--border); transition: .2s; }
+.icon-btn:hover { background: var(--glass-2); border-color: var(--cyan); transform: translateY(-1px); }
+
+/* ---------- Navbar ---------- */
+.navbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%); border-bottom: 1px solid var(--border); }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; min-height: 68px; position: relative; }
+.brand { display: flex; align-items: center; gap: .65rem; background: none; border: 0; padding: 0; }
+.logo { width: 38px; height: 38px; filter: drop-shadow(0 0 10px rgba(124,58,237,.7)); }
+.brand-name { font-family: var(--display); font-weight: 800; font-size: 1.2rem; letter-spacing: .22em; }
+.nav-menu { display: flex; align-items: center; gap: .3rem; }
+.nav-link { background: none; border: 0; padding: .55rem 1rem; border-radius: 12px; color: var(--muted); font-weight: 600; transition: .2s; }
+.nav-link:hover { color: var(--text); background: var(--glass); }
+.nav-link.active { color: var(--text); background: var(--glass-2); box-shadow: inset 0 -2px 0 var(--cyan); }
+.nav-tools { display: flex; gap: .45rem; margin-left: .7rem; }
+.nav-toggle { display: none; width: 44px; height: 44px; padding: 11px; background: none; border: 0; flex-direction: column; justify-content: space-between; }
+.nav-toggle span { height: 3px; border-radius: 3px; background: var(--text); transition: .25s; }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+/* ---------- Screens ---------- */
+.screen { display: none; }
+.screen.active { display: block; animation: screenIn .5s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes screenIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.page-head { margin-bottom: 1.6rem; }
+.page-head h2, .section-title { font-size: clamp(1.6rem, 3.5vw, 2.2rem); }
+.page-head p { margin: .4rem 0 0; color: var(--muted); max-width: 60ch; }
+.section-title { margin: 3rem 0 1.2rem; }
+.back-link { display: inline-flex; align-items: center; gap: .4rem; margin-bottom: 1rem; padding: .4rem .8rem .4rem .5rem; background: none; border: 0; color: var(--muted); font-weight: 600; border-radius: 10px; }
+.back-link:hover { color: var(--text); background: var(--glass); }
+.back-link .ico { transform: rotate(180deg); }
+.pill { display: inline-flex; align-items: center; gap: .5rem; padding: .4rem .9rem; border-radius: 99px; background: var(--glass-2); border: 1px solid var(--border); font-weight: 700; font-size: .85rem; }
+.pill .ico { color: var(--link); }
+
+/* ---------- Home ---------- */
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 2rem; align-items: center; padding: 1.5rem 0 .5rem; }
+.hero-tag { display: inline-flex; margin-bottom: 1.2rem; }
+.hero h1 { font-size: clamp(2.5rem, 6vw, 4.4rem); line-height: 1.04; font-weight: 800; letter-spacing: -.04em; }
+.hero h1 .grad { display: block; background: linear-gradient(100deg, var(--violet), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+[data-theme="light"] .hero h1 .grad { background: linear-gradient(100deg, #6D28D9, #0E7490); -webkit-background-clip: text; background-clip: text; }
+.hero-sub { margin: 1.3rem 0 1.9rem; font-size: 1.1rem; color: var(--muted); max-width: 48ch; }
+.hero-actions { display: flex; gap: .8rem; flex-wrap: wrap; }
+.hero-actions.center { justify-content: center; margin-top: 1.8rem; }
+.btn-lg { padding: 1.05rem 1.9rem; font-size: 1.05rem; }
+
+.hero-visual { position: relative; min-height: 400px; display: grid; place-items: center; }
+.orbit { position: absolute; border-radius: 50%; border: 1px dashed rgba(167,139,250,.35); animation: spin 40s linear infinite; }
+.orbit.o1 { width: 360px; height: 360px; } .orbit.o2 { width: 470px; height: 470px; border-color: rgba(34,211,238,.25); animation-direction: reverse; animation-duration: 60s; }
+.orbit::after { content: ""; position: absolute; top: 12%; left: 8%; width: 12px; height: 12px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 16px var(--cyan); }
+.mock { width: min(340px, 86%); padding: 1.3rem; transform: rotate(-3deg); animation: bob 7s ease-in-out infinite; }
+.mock-top { display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; }
+.mock-bar { flex: 1; height: 8px; border-radius: 8px; background: rgba(255,255,255,.12); overflow: hidden; }
+.mock-bar::after { content: ""; display: block; width: 60%; height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--purple), var(--cyan)); }
+.mock-time { font-size: .78rem; font-weight: 700; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.mock-q { font-family: var(--display); font-weight: 700; font-size: 1.02rem; line-height: 1.3; margin-bottom: 1rem; }
+.mock-opt { display: flex; align-items: center; gap: .7rem; padding: .6rem .8rem; margin-top: .55rem; border: 1px solid var(--border); border-radius: 12px; font-size: .9rem; font-weight: 600; background: rgba(255,255,255,.03); }
+.mock-opt b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: rgba(255,255,255,.1); font-size: .75rem; }
+.mock-opt.right { border-color: var(--ok); background: var(--ok-bg); }
+.mock-opt.right b { background: var(--ok); color: #05261b; }
+.chip-float { position: absolute; display: grid; place-items: center; min-width: 54px; height: 54px; padding: 0 .8rem; border-radius: 16px; font-family: ui-monospace, Consolas, monospace; font-weight: 700; font-size: 1.2rem; animation: bob 6s ease-in-out infinite; }
+.chip-q { top: 4%; right: 8%; width: 76px; height: 76px; font-family: var(--display); font-size: 2.4rem; color: #fff; background: linear-gradient(135deg, var(--purple), var(--cyan)); border: 0; box-shadow: 0 0 40px rgba(124,58,237,.7); animation-delay: -2s; }
+.chip-code { left: 2%; top: 30%; color: var(--cyan); animation-delay: -1s; }
+.chip-sum { right: 0; bottom: 22%; color: var(--violet); animation-delay: -3.5s; }
+.chip-score { left: 8%; bottom: 8%; color: var(--text); font-family: var(--body); font-size: .95rem; gap: .4rem; display: flex; align-items: center; animation-delay: -4.5s; }
+.chip-score .ico { color: var(--warn); }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(var(--r, -3deg)); } 50% { transform: translateY(-14px) rotate(var(--r, -3deg)); } }
+.chip-float { --r: 0deg; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2.5rem; }
+.stat-tile { padding: 1.4rem 1.2rem; text-align: center; }
+.stat-tile strong { display: block; font-family: var(--display); font-size: 2.3rem; font-weight: 800; letter-spacing: -.03em; background: linear-gradient(120deg, var(--text), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+[data-theme="light"] .stat-tile strong { background: linear-gradient(120deg, #12163A, #6D28D9); -webkit-background-clip: text; background-clip: text; }
+.stat-tile span { color: var(--muted); font-weight: 600; font-size: .92rem; }
+
+/* ---------- Category + difficulty cards ---------- */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.1rem; }
+.cat-grid.five { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.cat-card { --ang: 135deg; display: flex; align-items: center; gap: 1rem; text-align: left; padding: 1.3rem; transition: transform .25s, background .25s; }
+.cat-card:hover { transform: translateY(-5px); background: var(--glass-2); }
+.cat-grid.five .cat-card { flex-direction: column; align-items: flex-start; padding: 1.5rem 1.3rem; min-height: 210px; }
+.cat-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 17px; font-size: 1.6rem; color: #fff; background: linear-gradient(var(--ang), var(--purple), var(--cyan)); box-shadow: 0 8px 22px rgba(124,58,237,.4); transition: transform .3s; }
+.cat-card:hover .cat-icon { transform: rotate(-6deg) scale(1.08); }
+.cat-body { flex: 1; } .cat-body h3 { font-size: 1.12rem; } .cat-body p { margin: .25rem 0 .5rem; font-size: .9rem; color: var(--muted); } .cat-body small { color: var(--link); font-weight: 700; }
+.cat-go { color: var(--muted); transition: transform .25s, color .25s; }
+.cat-card:hover .cat-go { color: var(--cyan); transform: translateX(5px); }
+.cat-grid.five .cat-go { display: none; }
+.level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.1rem; }
+.level-card { display: flex; flex-direction: column; gap: .35rem; text-align: left; padding: 1.6rem 1.4rem; transition: transform .25s, background .25s; }
+.level-card:hover:not(:disabled) { transform: translateY(-5px); background: var(--glass-2); }
+.level-card:disabled { opacity: .45; cursor: not-allowed; }
+.level-card h3 { font-size: 1.35rem; margin-top: .6rem; } .level-card p { margin: 0; color: var(--muted); font-size: .92rem; flex: 1; } .level-card small { margin-top: .6rem; color: var(--link); font-weight: 700; }
+.bars { display: flex; gap: 5px; align-items: flex-end; height: 26px; }
+.bars i { width: 9px; border-radius: 3px; background: rgba(255,255,255,.14); }
+[data-theme="light"] .bars i { background: rgba(18,22,58,.14); }
+.bars i:nth-child(1) { height: 10px; } .bars i:nth-child(2) { height: 18px; } .bars i:nth-child(3) { height: 26px; }
+.bars i.on { background: linear-gradient(to top, var(--purple), var(--cyan)); box-shadow: 0 0 10px rgba(34,211,238,.5); }
+
+/* ---------- Quiz ---------- */
+.quiz-card { max-width: 800px; margin-inline: auto; padding: 2rem; }
+.quiz-card.enter .question, .quiz-card.enter .options { animation: screenIn .4s ease both; }
+.quiz-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: 1.3rem; }
+.chip-diff[data-level="Easy"] { color: var(--ok); } .chip-diff[data-level="Medium"] { color: var(--warn); } .chip-diff[data-level="Hard"] { color: var(--bad); }
+.timer { margin-left: auto; font-variant-numeric: tabular-nums; }
+.timer.warn { color: var(--bad); border-color: var(--bad); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .55; } }
+.progress-row { display: flex; align-items: center; gap: 1rem; font-weight: 700; margin-bottom: 1.5rem; font-variant-numeric: tabular-nums; }
+.progress { flex: 1; height: 10px; background: rgba(255,255,255,.09); border-radius: 99px; overflow: hidden; }
+[data-theme="light"] .progress { background: rgba(18,22,58,.1); }
+.progress-bar { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--purple), var(--cyan)); box-shadow: 0 0 14px rgba(34,211,238,.6); transition: width .5s ease; }
+.question { margin-bottom: 1.4rem; font-size: clamp(1.3rem, 3vw, 1.75rem); line-height: 1.28; }
+.options { display: grid; gap: .8rem; }
+.option { position: relative; display: flex; align-items: center; gap: 1rem; width: 100%; text-align: left; padding: 1rem 1.1rem; border: 1.5px solid var(--border); border-radius: 15px; background: var(--glass); transition: border-color .2s, background .2s, transform .2s, box-shadow .2s; }
+.option:hover:not(.locked) { border-color: var(--cyan); background: var(--glass-2); transform: translateX(5px); box-shadow: 0 0 20px rgba(34,211,238,.18); }
+.option .key { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--glass-2); border: 1px solid var(--border); font-family: var(--display); font-weight: 700; font-size: .9rem; }
+.option.locked { cursor: default; }
+.option.correct { border-color: var(--ok); background: var(--ok-bg); }
+.option.correct .key { background: var(--ok); border-color: var(--ok); color: #05261b; }
+.option.wrong { border-color: var(--bad); background: var(--bad-bg); animation: shake .35s; }
+.option.wrong .key { background: var(--bad); border-color: var(--bad); color: #3a0510; }
+.option.selected::after { content: "Your answer"; margin-left: auto; font-size: .75rem; font-weight: 700; color: var(--muted); }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.feedback { margin-top: 1.2rem; padding: 1rem 1.2rem; border-radius: 15px; background: var(--glass-2); border-left: 4px solid var(--violet); animation: screenIn .35s ease both; }
+.feedback.ok { border-color: var(--ok); } .feedback.bad { border-color: var(--bad); }
+.feedback.ok strong { color: var(--ok); } .feedback.bad strong { color: var(--bad); }
+.feedback[hidden] { display: none; }
+.quiz-nav { display: flex; justify-content: space-between; gap: .8rem; margin-top: 1.7rem; }
+
+/* ---------- Result ---------- */
+.result-card { max-width: 700px; margin-inline: auto; padding: 2.4rem 2rem; text-align: center; }
+.ring { --ring: var(--cyan); position: relative; display: grid; place-items: center; width: 190px; aspect-ratio: 1; margin: 0 auto 1.4rem; border-radius: 50%; background: conic-gradient(from 0deg, var(--purple), var(--ring) calc(var(--pct) * 1%), rgba(255,255,255,.09) 0); transition: --pct 1.1s cubic-bezier(.2,.7,.2,1); filter: drop-shadow(0 0 18px rgba(124,58,237,.5)); }
+.ring::before { content: ""; position: absolute; inset: 15px; border-radius: 50%; background: var(--bg); }
+.ring span { position: relative; font-family: var(--display); font-size: 2.6rem; font-weight: 800; letter-spacing: -.04em; }
+.result-card h2 { font-size: 2rem; margin-bottom: .3rem; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: .8rem; margin-top: 1.8rem; }
+.rstat { padding: 1rem .5rem; border-radius: 16px; background: var(--glass-2); border: 1px solid var(--border); }
+.rstat strong { display: block; font-family: var(--display); font-size: 1.6rem; }
+.rstat span { font-size: .82rem; color: var(--muted); font-weight: 600; }
+.rstat.ok strong { color: var(--ok); } .rstat.bad strong { color: var(--bad); }
+
+/* ---------- History ---------- */
+.history-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.history-summary { display: flex; gap: .7rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.history-list { display: grid; gap: .9rem; }
+.history-item { display: grid; grid-template-columns: 1fr auto; gap: .2rem 1rem; align-items: center; padding: 1.1rem 1.4rem; }
+.history-item h3 { display: flex; align-items: center; gap: .6rem; font-size: 1.05rem; }
+.history-item h3 .ico { color: var(--link); }
+.history-item small { color: var(--muted); }
+.score-badge { grid-row: span 2; grid-column: 2; padding: .55rem 1.1rem; border-radius: 13px; font-family: var(--display); font-weight: 700; background: var(--glass-2); border: 1px solid var(--border); }
+.score-badge.good { color: var(--ok); border-color: var(--ok); } .score-badge.mid { color: var(--warn); border-color: var(--warn); } .score-badge.low { color: var(--bad); border-color: var(--bad); }
+.empty { text-align: center; padding: 3.2rem 1rem; border: 1.5px dashed var(--border); border-radius: 22px; color: var(--muted); }
+.empty strong { color: var(--text); font-family: var(--display); font-size: 1.2rem; }
+
+/* ---------- Dialog + footer ---------- */
+dialog { width: min(430px, 92vw); padding: 1.7rem; border: 1px solid var(--border); border-radius: 22px; background: color-mix(in srgb, var(--bg) 88%, #1b2250); color: var(--text); box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 40px rgba(124,58,237,.25); }
+dialog::backdrop { background: rgba(5,8,22,.65); backdrop-filter: blur(5px); }
+dialog p { margin: 0 0 1.5rem; font-size: 1.08rem; font-weight: 600; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: .7rem; }
+.footer { text-align: center; padding: 1.6rem 1rem; color: var(--muted); font-size: .92rem; border-top: 1px solid var(--border); }
+.footer strong { font-family: var(--display); letter-spacing: .18em; color: var(--text); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; text-align: left; } .hero-visual { min-height: 380px; order: -1; margin-bottom: -.5rem; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 720px) {
+  .nav-toggle { display: flex; }
+  .nav-menu { display: none; position: absolute; top: 100%; left: -1rem; right: -1rem; flex-direction: column; align-items: stretch; padding: .8rem 1rem 1.1rem; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(18px); border-bottom: 1px solid var(--border); }
+  .nav-menu.open { display: flex; animation: screenIn .25s ease both; }
+  .nav-link { text-align: left; } .nav-tools { margin: .5rem 0 0; }
+  .brand-name { letter-spacing: .16em; }
+}
+@media (max-width: 520px) {
+  .glass { border-radius: 18px; } .quiz-card, .result-card { padding: 1.25rem; }
+  .quiz-nav .btn { flex: 1; padding-inline: .8rem; } .hero-actions .btn { flex: 1; }
+  .orbit.o2 { display: none; } .hero-visual { min-height: 340px; } .cat-grid { grid-template-columns: 1fr; }
+  .cat-grid.five { grid-template-columns: 1fr 1fr; } .cat-grid.five .cat-card { min-height: 180px; padding: 1.1rem; }
+  .cat-grid.five .cat-body p { display: none; } .timer { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+</style>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A78BFA"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs>
+  <symbol id="logo" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="11" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linecap="round" stroke-dasharray="57 12" transform="rotate(62 16 16)"/>
+    <path d="M12.6 13.1a3.5 3.5 0 1 1 5.4 2.9c-1.3.8-2 1.5-2 3" fill="none" stroke="#F8FAFC" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="16" cy="22" r="1.3" fill="#F8FAFC"/>
+    <path d="M21.4 21.4l4.9 4.9" stroke="#22D3EE" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-prog" viewBox="0 0 24 24"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+  <symbol id="i-cs" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+  <symbol id="i-gk" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></symbol>
+  <symbol id="i-sci" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A1.5 1.5 0 0 0 5.8 21h12.4a1.5 1.5 0 0 0 1.3-2.5L14 9V3M7.5 15h9"/></symbol>
+  <symbol id="i-math" viewBox="0 0 24 24"><path d="M5 7h6M8 4v6M14 7h6M5 14l6 6M11 14l-6 6M14 15h6M14 19h6"/></symbol>
+  <symbol id="i-mix" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></symbol>
+  <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></symbol>
+  <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 21h8M9 17h6"/></symbol>
+</svg>
+
+<div class="bg" aria-hidden="true">
+  <div class="aurora"></div><div class="bg-grid"></div>
+  <svg class="bg-shapes" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+    <polygon class="spin" points="150,120 230,165 230,255 150,300 70,255 70,165"/>
+    <polygon class="spin rev" points="1050,520 1150,580 1150,700 1050,760 950,700 950,580"/>
+    <rect class="spin rev" x="860" y="90" width="90" height="90" rx="6"/>
+    <circle cx="260" cy="620" r="60"/><circle cx="260" cy="620" r="90" stroke-dasharray="4 8"/>
+    <polygon class="spin" points="600,690 650,775 550,775"/><path d="M40 420q60-70 120 0t120 0"/>
+  </svg>
+  <div class="symbols" id="symbols"></div><canvas id="particles"></canvas>
+</div>
+
+<header class="navbar">
+  <div class="container nav-inner">
+    <button class="brand" data-nav="home" aria-label="QUIZORA home">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><use href="#logo"/></svg><span class="brand-name">QUIZORA</span>
+    </button>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navMenu"><span></span><span></span><span></span></button>
+    <nav class="nav-menu" id="navMenu" aria-label="Main">
+      <button class="nav-link" data-nav="home">Home</button>
+      <button class="nav-link" data-nav="categories">Categories</button>
+      <button class="nav-link" data-nav="history">History</button>
+      <div class="nav-tools">
+        <button class="icon-btn" id="soundToggle" aria-label="Mute sound" title="Sound on/off"></button>
+        <button class="icon-btn" id="themeToggle" aria-label="Switch theme" title="Dark / light mode"></button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <!-- 1. Home -->
+  <section id="home" class="screen active">
+    <div class="hero">
+      <div>
+        <span class="pill hero-tag">Smart quiz platform</span>
+        <h1>Challenge Your Mind.<span class="grad">Discover Your Potential.</span></h1>
+        <p class="hero-sub">Timed quizzes in programming, computer science, science, mathematics and general knowledge, with instant explanations and a score history that shows how far you have come.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" id="startBtn">Start Quiz <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <button class="btn btn-ghost btn-lg" data-nav="history">View history</button>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="orbit o1"></div><div class="orbit o2"></div>
+        <div class="mock glass glow">
+          <div class="mock-top"><span class="mock-bar"></span><span class="mock-time">00:14</span></div>
+          <div class="mock-q">What is the time complexity of binary search?</div>
+          <div class="mock-opt"><b>A</b>O(n)</div>
+          <div class="mock-opt right"><b>B</b>O(log n)</div>
+          <div class="mock-opt"><b>C</b>O(n log n)</div>
+          <div class="mock-opt"><b>D</b>O(1)</div>
+        </div>
+        <div class="chip-float chip-q glass">?</div>
+        <div class="chip-float chip-code glass">&lt;/&gt;</div>
+        <div class="chip-float chip-sum glass">∑</div>
+        <div class="chip-float chip-score glass"><svg class="ico"><use href="#i-trophy"/></svg>9/10</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-tile glass glow"><strong id="statQuestions">50</strong><span>Original questions</span></div>
+      <div class="stat-tile glass glow"><strong>5</strong><span>Subject categories</span></div>
+      <div class="stat-tile glass glow"><strong>3</strong><span>Difficulty levels</span></div>
+      <div class="stat-tile glass glow"><strong id="statBest">–</strong><span>Your best score</span></div>
+    </div>
+    <h2 class="section-title">Pick a subject</h2>
+    <div class="cat-grid five" id="homeCategoryGrid"></div>
+  </section>
+
+  <!-- 2. Category selection -->
+  <section id="categories" class="screen">
+    <div class="page-head"><h2>Choose a category</h2><p>Pick one subject, or try Mixed for random questions from everything.</p></div>
+    <div class="cat-grid" id="categoryGrid"></div>
+  </section>
+
+  <!-- 3. Difficulty selection -->
+  <section id="difficulty" class="screen">
+    <button class="back-link" data-nav="categories"><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg>Categories</button>
+    <div class="page-head"><span class="pill" id="difficultyCategory"></span><h2 style="margin-top:.9rem">Choose a difficulty</h2><p>Each quiz has up to 10 questions and 20 seconds per question.</p></div>
+    <div class="level-grid" id="difficultyGrid"></div>
+  </section>
+
+  <!-- 4. Quiz -->
+  <section id="quiz" class="screen">
+    <div class="glass glow quiz-card" id="quizCard">
+      <div class="quiz-meta">
+        <span class="pill" id="quizCategory"></span>
+        <span class="pill chip-diff" id="quizDifficulty"></span>
+        <span class="pill timer" id="timer" role="timer"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span id="timerText">00:00</span></span>
+        <button class="icon-btn" id="restartBtn" aria-label="Restart quiz" title="Restart quiz"><svg class="ico"><use href="#i-restart"/></svg></button>
+      </div>
+      <div class="progress-row"><span id="questionCounter">1/10</span><div class="progress" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="100" id="progress"><div class="progress-bar" id="progressBar"></div></div></div>
+      <h2 class="question" id="questionText"></h2>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback" hidden></div>
+      <div class="quiz-nav">
+        <button class="btn btn-ghost" id="prevBtn">Previous</button>
+        <button class="btn btn-primary" id="nextBtn">Next question</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Result -->
+  <section id="result" class="screen">
+    <div class="glass glow result-card">
+      <div class="ring" id="scoreRing"><span id="scorePercent">0%</span></div>
+      <h2 id="resultTitle"></h2>
+      <p class="muted" id="resultMessage"></p>
+      <div class="stat-grid">
+        <div class="rstat"><strong id="resTotal">0</strong><span>Total questions</span></div>
+        <div class="rstat ok"><strong id="resCorrect">0</strong><span>Correct</span></div>
+        <div class="rstat bad"><strong id="resIncorrect">0</strong><span>Incorrect</span></div>
+        <div class="rstat"><strong id="resUnanswered">0</strong><span>Unanswered</span></div>
+        <div class="rstat"><strong id="resTime">00:00</strong><span>Time taken</span></div>
+      </div>
+      <div class="hero-actions center">
+        <button class="btn btn-primary" id="retryBtn">Restart quiz</button>
+        <button class="btn btn-ghost" data-nav="home">Return to home</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. History -->
+  <section id="history" class="screen">
+    <div class="history-head">
+      <div class="page-head" style="margin:0"><h2>Quiz history</h2><p>Your most recent results, saved on this device.</p></div>
+      <button class="btn btn-danger" id="clearHistoryBtn">Clear history</button>
+    </div>
+    <div class="history-summary" id="historySummary"></div>
+    <div class="history-list" id="historyList"></div>
+  </section>
+</main>
+
+<footer class="footer"><strong>QUIZORA</strong> · Challenge Your Mind. Discover Your Potential.</footer>
+
+<dialog id="confirmDialog" aria-labelledby="confirmMessage">
+  <form method="dialog">
+    <p id="confirmMessage"></p>
+    <div class="dialog-actions">
+      <button class="btn btn-ghost" value="cancel">Cancel</button>
+      <button class="btn btn-primary" id="confirmOk" value="ok">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+
+/* QuizMaster question bank: 50 original questions (10 per category).
+   q(category, difficulty, question, correctAnswer, [three wrong answers], explanation)
+   Answer positions are shuffled at runtime, so the order written here doesn't matter. */
+const q = (category, difficulty, question, answer, wrong, explanation) =>
+  ({ category, difficulty, question, answer, options: [answer, ...wrong], explanation });
+
+const QUESTIONS = [
+  // ---------- Programming ----------
+  q("Programming", "Easy", "Which JavaScript keyword declares a block-scoped variable?", "let", ["var", "def", "dim"], "let (and const) are block-scoped, while var is function-scoped."),
+  q("Programming", "Easy", "Which symbol starts a single-line comment in Python?", "#", ["//", "--", "/*"], "Python uses # for single-line comments."),
+  q("Programming", "Easy", "What does HTML stand for?", "HyperText Markup Language", ["HighText Machine Language", "HyperTool Markup Logic", "Home Text Markup Language"], "HTML is the standard markup language used to structure web pages."),
+  q("Programming", "Medium", "What is the time complexity of binary search on a sorted array?", "O(log n)", ["O(n)", "O(n log n)", "O(1)"], "Each step halves the search space, giving logarithmic time."),
+  q("Programming", "Medium", "In C++, which operator accesses a member through a pointer?", "->", [".", "::", "&"], "ptr->member is shorthand for (*ptr).member."),
+  q("Programming", "Medium", "What does === check in JavaScript?", "Value and type equality", ["Value equality only", "Reference equality only", "Type equality only"], "=== is strict equality: no type coercion is performed."),
+  q("Programming", "Medium", "Which HTTP status code means 'Not Found'?", "404", ["200", "301", "500"], "404 means the server cannot find the requested resource."),
+  q("Programming", "Hard", "Which of these is NOT a primitive type in JavaScript?", "Object", ["Symbol", "BigInt", "String"], "Objects are reference types; the primitives are string, number, bigint, boolean, undefined, null and symbol."),
+  q("Programming", "Hard", "What does len({1, 2, 2, 3}) return in Python?", "3", ["4", "2", "It raises an error"], "A set stores unique values only, so the duplicate 2 is removed."),
+  q("Programming", "Hard", "Which data structure do recursive function calls use internally?", "Stack", ["Queue", "Heap", "Graph"], "Each call is pushed on the call stack and popped when it returns."),
+
+  // ---------- Computer Science ----------
+  q("Computer Science", "Easy", "What does CPU stand for?", "Central Processing Unit", ["Central Program Utility", "Computer Primary Unit", "Core Processing Utility"], "The CPU executes instructions and is the 'brain' of the computer."),
+  q("Computer Science", "Easy", "What is the binary representation of decimal 5?", "101", ["110", "011", "111"], "5 = 4 + 1, which is 101 in binary."),
+  q("Computer Science", "Easy", "Which of these is volatile memory?", "RAM", ["SSD", "ROM", "Hard disk"], "RAM loses its contents when power is turned off."),
+  q("Computer Science", "Medium", "Which OSI layer is responsible for routing packets?", "Network layer", ["Transport layer", "Data link layer", "Session layer"], "The network layer (IP) selects paths between networks."),
+  q("Computer Science", "Medium", "Which data structure follows FIFO order?", "Queue", ["Stack", "Tree", "Heap"], "A queue removes the element that was inserted first."),
+  q("Computer Science", "Medium", "What is the purpose of a primary key in a database table?", "Uniquely identify each row", ["Encrypt the data", "Speed up every query", "Link to another database"], "A primary key is unique and non-null for every row."),
+  q("Computer Science", "Medium", "Which sorting algorithm has O(n log n) time even in the worst case?", "Merge sort", ["Quick sort", "Bubble sort", "Insertion sort"], "Merge sort always splits and merges in O(n log n); quick sort can degrade to O(n²)."),
+  q("Computer Science", "Hard", "Which is a necessary condition for deadlock?", "Mutual exclusion", ["Pre-emption", "Time slicing", "Paging"], "Deadlock needs mutual exclusion, hold and wait, no pre-emption, and circular wait."),
+  q("Computer Science", "Hard", "Which normal form removes transitive dependencies?", "Third Normal Form (3NF)", ["First Normal Form", "Second Normal Form", "Zero Normal Form"], "3NF requires that non-key attributes depend only on the key."),
+  q("Computer Science", "Hard", "What does the 'S' in SQL stand for?", "Structured", ["Simple", "Sequential", "Secure"], "SQL means Structured Query Language."),
+
+  // ---------- General Knowledge ----------
+  q("General Knowledge", "Easy", "What is the capital of Australia?", "Canberra", ["Sydney", "Melbourne", "Perth"], "Canberra was purpose-built as the capital in the early 1900s."),
+  q("General Knowledge", "Easy", "Which is the largest ocean on Earth?", "Pacific Ocean", ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean"], "The Pacific covers about one-third of the Earth's surface."),
+  q("General Knowledge", "Easy", "Which is the national animal of India?", "Bengal tiger", ["Asian lion", "Indian elephant", "Leopard"], "The Bengal tiger is India's national animal."),
+  q("General Knowledge", "Easy", "Which book did Jawaharlal Nehru write in 1946?", "The Discovery of India", ["Gitanjali", "Wings of Fire", "India Wins Freedom"], "Nehru wrote The Discovery of India while imprisoned at Ahmednagar Fort."),
+  q("General Knowledge", "Medium", "Which country gifted the Statue of Liberty to the USA?", "France", ["United Kingdom", "Spain", "Italy"], "It was a gift from France, dedicated in 1886."),
+  q("General Knowledge", "Medium", "Who was the first Indian citizen to travel to space?", "Rakesh Sharma", ["Kalpana Chawla", "Sunita Williams", "Vikram Sarabhai"], "Rakesh Sharma flew aboard Soyuz T-11 in 1984."),
+  q("General Knowledge", "Medium", "Which river is the longest flowing within India?", "Ganga", ["Yamuna", "Godavari", "Narmada"], "The Ganga is the longest river that flows within India."),
+  q("General Knowledge", "Hard", "Where is the headquarters of ISRO located?", "Bengaluru", ["Hyderabad", "Thiruvananthapuram", "Sriharikota"], "ISRO's headquarters is in Bengaluru, Karnataka."),
+  q("General Knowledge", "Hard", "Who shared the 2014 Nobel Peace Prize with Malala Yousafzai?", "Kailash Satyarthi", ["Muhammad Yunus", "Amartya Sen", "Abhijit Banerjee"], "Both were honoured for their work for children's right to education."),
+  q("General Knowledge", "Hard", "Which is the smallest country in the world by area?", "Vatican City", ["Monaco", "San Marino", "Liechtenstein"], "Vatican City covers only about 0.44 square kilometres."),
+
+  // ---------- Science ----------
+  q("Science", "Easy", "What is the chemical symbol for gold?", "Au", ["Ag", "Go", "Gd"], "Au comes from the Latin word 'aurum'."),
+  q("Science", "Easy", "Which planet is known as the Red Planet?", "Mars", ["Venus", "Jupiter", "Mercury"], "Iron oxide on its surface gives Mars its red colour."),
+  q("Science", "Easy", "Which gas do plants absorb for photosynthesis?", "Carbon dioxide", ["Oxygen", "Nitrogen", "Hydrogen"], "Plants convert CO₂ and water into glucose and oxygen."),
+  q("Science", "Medium", "What is the SI unit of force?", "Newton", ["Joule", "Pascal", "Watt"], "One newton accelerates 1 kg by 1 m/s²."),
+  q("Science", "Medium", "Which organelle is called the powerhouse of the cell?", "Mitochondria", ["Ribosome", "Nucleus", "Golgi body"], "Mitochondria produce most of the cell's ATP."),
+  q("Science", "Medium", "What is the approximate speed of light in a vacuum?", "3 × 10⁸ m/s", ["3 × 10⁶ m/s", "3 × 10⁵ m/s", "3 × 10¹⁰ m/s"], "Light travels about 300,000 km every second."),
+  q("Science", "Medium", "What is the pH of pure water at 25 °C?", "7", ["0", "1", "14"], "A pH of 7 is neutral."),
+  q("Science", "Hard", "Which subatomic particle carries a negative charge?", "Electron", ["Proton", "Neutron", "Positron"], "Electrons are negatively charged and about 1/1836 the mass of a proton."),
+  q("Science", "Hard", "Which law is expressed as V = IR?", "Ohm's law", ["Faraday's law", "Coulomb's law", "Kirchhoff's law"], "Ohm's law relates voltage, current and resistance."),
+  q("Science", "Hard", "Which gas makes up most of Earth's atmosphere?", "Nitrogen", ["Oxygen", "Argon", "Carbon dioxide"], "Nitrogen is about 78% of the atmosphere; oxygen is about 21%."),
+
+  // ---------- Mathematics ----------
+  q("Mathematics", "Easy", "What is 12 × 12?", "144", ["124", "122", "148"], "12 × 12 = 144."),
+  q("Mathematics", "Easy", "What is the square root of 81?", "9", ["8", "7", "11"], "9 × 9 = 81."),
+  q("Mathematics", "Easy", "What is the sum of the interior angles of a triangle?", "180°", ["90°", "270°", "360°"], "The three angles of any triangle add up to 180°."),
+  q("Mathematics", "Medium", "What is the derivative of x²?", "2x", ["x", "x²", "2"], "By the power rule, d/dx (xⁿ) = n·xⁿ⁻¹."),
+  q("Mathematics", "Medium", "What is log₁₀(1000)?", "3", ["2", "10", "100"], "10³ = 1000, so the logarithm is 3."),
+  q("Mathematics", "Medium", "Solve for x: 2x + 6 = 14.", "x = 4", ["x = 3", "x = 5", "x = 10"], "Subtract 6 to get 2x = 8, then divide by 2."),
+  q("Mathematics", "Medium", "What is the approximate value of π?", "3.14159", ["2.71828", "1.61803", "1.41421"], "2.718 is e, 1.618 is the golden ratio, 1.414 is √2."),
+  q("Mathematics", "Hard", "What is the integral of 1/x dx?", "ln|x| + C", ["x² + C", "1/x² + C", "e^x + C"], "The antiderivative of 1/x is the natural logarithm of |x|."),
+  q("Mathematics", "Hard", "In how many ways can 4 distinct books be arranged on a shelf?", "24", ["16", "12", "4"], "4! = 4 × 3 × 2 × 1 = 24."),
+  q("Mathematics", "Hard", "What is the determinant of the 2 × 2 identity matrix?", "1", ["0", "2", "-1"], "det = (1 × 1) − (0 × 0) = 1.")
+];
+
+
+</script>
+<script>
+
+/* QuizMaster – application logic (Vanilla JS) */
+(() => {
+  'use strict';
+
+  /* ---------- Config ---------- */
+  const QUESTIONS_PER_QUIZ = 10;
+  const SECONDS_PER_QUESTION = 20;   // total quiz time = questions × 20s
+  const WARNING_SECONDS = 20;
+  const MAX_HISTORY = 50;
+  const STORAGE_KEYS = { history: 'quizmaster_history', prefs: 'quizmaster_prefs' };
+  const MIXED = 'Mixed';
+  const CATEGORY_META = {
+    'Programming':       { icon: 'prog', blurb: 'Languages, syntax and algorithms' },
+    'Computer Science':  { icon: 'cs',   blurb: 'Networks, databases and theory' },
+    'General Knowledge': { icon: 'gk',   blurb: 'People, places and world facts' },
+    'Science':           { icon: 'sci',  blurb: 'Physics, chemistry and biology' },
+    'Mathematics':       { icon: 'math', blurb: 'Algebra, calculus and logic' },
+    [MIXED]:             { icon: 'mix',  blurb: 'Random questions from every category' }
+  };
+  const LEVELS = [
+    { name: 'Easy',   label: 'Easy',       blurb: 'Warm up with core fundamentals', bars: 1 },
+    { name: 'Medium', label: 'Medium',     blurb: 'Apply what you already know',    bars: 2 },
+    { name: 'Hard',   label: 'Hard',       blurb: 'Tricky, detail-heavy questions', bars: 3 },
+    { name: 'All',    label: 'All levels', blurb: 'A balanced mix of every level',  bars: 0 }
+  ];
+  const ico = (id) => `<svg class="ico" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+  const poolFor = (category, level = 'All') => QUESTIONS.filter((item) =>
+    (category === MIXED || item.category === category) && (level === 'All' || item.difficulty === level));
+
+  /* ---------- Helpers ---------- */
+  const $ = (selector) => document.querySelector(selector);
+  const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+  const store = {
+    read(key, fallback) {
+      try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+      catch { return fallback; }
+    },
+    write(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage full or blocked */ }
+    }
+  };
+
+  const shuffle = (list) => {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  const formatTime = (totalSeconds) => {
+    const s = Math.max(0, Math.round(totalSeconds));
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  };
+
+  /* ---------- State ---------- */
+  const savedPrefs = store.read(STORAGE_KEYS.prefs, {});
+  const prefs = {
+    theme: savedPrefs.theme === 'light' ? 'light' : 'dark',   // midnight theme is the default
+    muted: Boolean(savedPrefs.muted)
+  };
+  let quiz = null;        // active quiz session (null when none)
+  let timerId = null;
+  let currentScreen = 'home';
+  let lastCategory = null;
+  let lastDifficulty = 'All';
+  let selectedCategory = null;
+
+  /* ---------- Sound ---------- */
+  let audioCtx = null;
+  function playTones(frequencies, step = 0.12) {
+    if (prefs.muted) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      frequencies.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const start = audioCtx.currentTime + i * step;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + step);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + step);
+      });
+    } catch { /* audio unavailable */ }
+  }
+  const sounds = {
+    correct: () => playTones([660, 880]),
+    wrong: () => playTones([220, 170], 0.16),
+    finish: () => playTones([523, 659, 784, 1047], 0.14)
+  };
+
+  /* ---------- Preferences (theme / sound) ---------- */
+  function applyPrefs() {
+    document.documentElement.dataset.theme = prefs.theme;
+    $('#themeToggle').innerHTML = ico(prefs.theme === 'dark' ? 'sun' : 'moon');
+    $('#themeToggle').setAttribute('aria-label', prefs.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    $('#soundToggle').innerHTML = ico(prefs.muted ? 'mute' : 'vol');
+    $('#soundToggle').setAttribute('aria-label', prefs.muted ? 'Unmute sound' : 'Mute sound');
+    store.write(STORAGE_KEYS.prefs, prefs);
+  }
+
+  /* ---------- Confirm dialog ---------- */
+  function confirmAction(message, okLabel = 'Confirm') {
+    return new Promise((resolve) => {
+      const dialog = $('#confirmDialog');
+      $('#confirmMessage').textContent = message;
+      $('#confirmOk').textContent = okLabel;
+      dialog.returnValue = 'cancel';
+      dialog.addEventListener('close', () => resolve(dialog.returnValue === 'ok'), { once: true });
+      dialog.showModal();
+    });
+  }
+
+  /* ---------- Navigation ---------- */
+  const isQuizActive = () => Boolean(quiz && !quiz.finished && currentScreen === 'quiz');
+
+  function showScreen(name) {
+    currentScreen = name;
+    $$('.screen').forEach((el) => el.classList.toggle('active', el.id === name));
+    const navKey = name === 'difficulty' ? 'categories' : name;
+    $$('.nav-link').forEach((el) => el.classList.toggle('active', el.dataset.nav === navKey));
+    $('#navMenu').classList.remove('open');
+    $('#navToggle').setAttribute('aria-expanded', 'false');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function navigate(name) {
+    if (isQuizActive()) {
+      const leave = await confirmAction('Leave the quiz? Your progress will be lost.', 'Leave quiz');
+      if (!leave) return;
+      stopTimer();
+      quiz = null;
+    }
+    if (name === 'history') renderHistory();
+    showScreen(name);
+  }
+
+  /* ---------- Home: categories ---------- */
+  function renderCategories() {
+    [['#homeCategoryGrid', false], ['#categoryGrid', true]].forEach(([selector, withMixed]) => {
+      const grid = $(selector);
+      grid.innerHTML = '';
+      Object.entries(CATEGORY_META).forEach(([name, meta], i) => {
+        if (name === MIXED && !withMixed) return;
+        const card = document.createElement('button');
+        card.className = 'cat-card glass glow';
+        card.style.setProperty('--ang', `${i * 55 + 20}deg`);
+        card.innerHTML = `<span class="cat-icon">${ico(meta.icon)}</span><span class="cat-body"><h3></h3><p></p><small></small></span><span class="cat-go">${ico('arrow')}</span>`;
+        card.querySelector('h3').textContent = name;
+        card.querySelector('p').textContent = meta.blurb;
+        card.querySelector('small').textContent = `${poolFor(name).length} questions`;
+        card.addEventListener('click', () => openDifficulty(name));
+        grid.appendChild(card);
+      });
+    });
+    $('#statQuestions').textContent = QUESTIONS.length;
+  }
+
+  function openDifficulty(category) {
+    selectedCategory = category;
+    $('#difficultyCategory').innerHTML = `${ico(CATEGORY_META[category].icon)}<span></span>`;
+    $('#difficultyCategory span').textContent = category;
+    const grid = $('#difficultyGrid');
+    grid.innerHTML = '';
+    LEVELS.forEach((level) => {
+      const available = poolFor(category, level.name).length;
+      const card = document.createElement('button');
+      card.className = 'level-card glass glow';
+      card.disabled = available === 0;
+      card.innerHTML = '<span class="bars"><i></i><i></i><i></i></span><h3></h3><p></p><small></small>';
+      card.querySelectorAll('.bars i').forEach((bar, i) => bar.classList.toggle('on', level.bars === 0 || i < level.bars));
+      card.querySelector('h3').textContent = level.label;
+      card.querySelector('p').textContent = level.blurb;
+      card.querySelector('small').textContent = `${Math.min(available, QUESTIONS_PER_QUIZ)} questions`;
+      card.addEventListener('click', () => startQuiz(category, level.name));
+      grid.appendChild(card);
+    });
+    showScreen('difficulty');
+  }
+
+  function updateStats() {
+    const history = loadHistory();
+    $('#statBest').textContent = history.length ? `${Math.max(...history.map((h) => h.percent))}%` : '–';
+  }
+
+  /* ---------- Quiz lifecycle ---------- */
+  function startQuiz(category, difficulty = 'All') {
+    const pool = poolFor(category, difficulty);
+    if (pool.length === 0) return;
+    const picked = shuffle(pool).slice(0, QUESTIONS_PER_QUIZ)
+      .map((item) => ({ ...item, options: shuffle(item.options) }));
+    const now = Date.now();
+    quiz = {
+      category,
+      difficulty,
+      questions: picked,
+      answers: new Array(picked.length).fill(null),   // chosen option text, or null
+      index: 0,
+      startTime: now,
+      endTime: now + picked.length * SECONDS_PER_QUESTION * 1000,
+      finished: false
+    };
+    lastCategory = category;
+    lastDifficulty = difficulty;
+    $('#quizCategory').innerHTML = `${ico(CATEGORY_META[category].icon)}<span></span>`;
+    $('#quizCategory span').textContent = `${category} · ${difficulty === 'All' ? 'All levels' : difficulty}`;
+    showScreen('quiz');
+    renderQuestion(true);
+    startTimer();
+  }
+
+  function startTimer() {
+    stopTimer();
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((quiz.endTime - Date.now()) / 1000));
+      const timer = $('#timer');
+      $('#timerText').textContent = formatTime(left);
+      timer.classList.toggle('warn', left <= WARNING_SECONDS);
+      if (left <= 0) finishQuiz(true);
+    };
+    tick();
+    if (quiz && !quiz.finished) timerId = setInterval(tick, 250);
+  }
+
+  function stopTimer() { clearInterval(timerId); timerId = null; }
+
+  function renderQuestion(animate = false) {
+    const { questions, answers, index } = quiz;
+    const item = questions[index];
+    const chosen = answers[index];
+    const total = questions.length;
+
+    $('#questionCounter').textContent = `${index + 1}/${total}`;
+    $('#progressBar').style.width = `${((index + 1) / total) * 100}%`;
+    $('#progress').setAttribute('aria-valuenow', Math.round(((index + 1) / total) * 100));
+    $('#questionText').textContent = item.question;
+    const diff = $('#quizDifficulty');
+    diff.textContent = item.difficulty;
+    diff.dataset.level = item.difficulty;
+
+    const options = $('#options');
+    options.innerHTML = '';
+    item.options.forEach((text, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option';
+      btn.innerHTML = '<span class="key"></span><span class="label"></span>';
+      btn.querySelector('.key').textContent = 'ABCD'[i];
+      btn.querySelector('.label').textContent = text;
+      if (chosen !== null) {
+        btn.classList.add('locked');
+        btn.setAttribute('aria-disabled', 'true');
+        if (text === item.answer) btn.classList.add('correct');
+        if (text === chosen) {
+          btn.classList.add('selected');
+          if (text !== item.answer) btn.classList.add('wrong');
+        }
+      }
+      btn.addEventListener('click', () => selectAnswer(text));
+      options.appendChild(btn);
+    });
+
+    const feedback = $('#feedback');
+    if (chosen === null) {
+      feedback.hidden = true;
+    } else {
+      const right = chosen === item.answer;
+      feedback.hidden = false;
+      feedback.className = `feedback ${right ? 'ok' : 'bad'}`;
+      feedback.innerHTML = '<strong></strong> <span></span>';
+      feedback.querySelector('strong').textContent = right ? 'Correct.' : `Incorrect. Answer: ${item.answer}.`;
+      feedback.querySelector('span').textContent = item.explanation;
+    }
+
+    $('#prevBtn').disabled = index === 0;
+    $('#nextBtn').textContent = index === total - 1 ? 'Finish quiz' : 'Next question';
+
+    if (animate) {
+      const card = $('#quizCard');
+      card.classList.remove('enter');
+      void card.offsetWidth;               // restart CSS animation
+      card.classList.add('enter');
+    }
+  }
+
+  function selectAnswer(text) {
+    if (!quiz || quiz.finished || quiz.answers[quiz.index] !== null) return;   // one answer per question
+    quiz.answers[quiz.index] = text;
+    (text === quiz.questions[quiz.index].answer ? sounds.correct : sounds.wrong)();
+    renderQuestion();
+  }
+
+  async function goNext() {
+    if (!quiz || quiz.finished) return;
+    if (quiz.index < quiz.questions.length - 1) { quiz.index++; renderQuestion(true); return; }
+    const unanswered = quiz.answers.filter((a) => a === null).length;
+    if (unanswered > 0) {
+      const ok = await confirmAction(`You have ${unanswered} unanswered question${unanswered > 1 ? 's' : ''}. Finish anyway?`, 'Finish quiz');
+      if (!ok) return;
+    }
+    finishQuiz(false);
+  }
+
+  function goPrevious() {
+    if (!quiz || quiz.finished || quiz.index === 0) return;
+    quiz.index--;
+    renderQuestion(true);
+  }
+
+  async function restartActiveQuiz() {
+    if (!quiz || quiz.finished) return;
+    const ok = await confirmAction('Restart this quiz? Your current progress will be lost.', 'Restart');
+    if (ok && quiz && !quiz.finished) startQuiz(quiz.category, quiz.difficulty);
+  }
+
+  /* ---------- Results ---------- */
+  function finishQuiz(timedOut) {
+    if (!quiz || quiz.finished) return;
+    quiz.finished = true;
+    stopTimer();
+    const dialog = $('#confirmDialog');
+    if (dialog.open) dialog.close('cancel');
+
+    const total = quiz.questions.length;
+    const correct = quiz.answers.filter((a, i) => a === quiz.questions[i].answer).length;
+    const unanswered = quiz.answers.filter((a) => a === null).length;
+    const incorrect = total - correct - unanswered;
+    const percent = Math.round((correct / total) * 100);
+    const seconds = Math.round((Math.min(Date.now(), quiz.endTime) - quiz.startTime) / 1000);
+
+    saveResult({ category: quiz.category, difficulty: quiz.difficulty, total, correct, percent, seconds, date: new Date().toISOString() });
+    renderResult({ total, correct, incorrect, unanswered, percent, seconds, timedOut });
+    showScreen('result');
+    sounds.finish();
+  }
+
+  function performanceMessage(percent) {
+    if (percent >= 90) return ['Outstanding!', 'You clearly know this topic inside out.'];
+    if (percent >= 70) return ['Great job!', 'A strong score. A little more practice and you will be perfect.'];
+    if (percent >= 50) return ['Good effort', 'You are on the right track. Review the explanations and try again.'];
+    return ['Keep practising', 'Every attempt helps. Try again and read the explanations carefully.'];
+  }
+
+  function renderResult(r) {
+    const [title, message] = performanceMessage(r.percent);
+    $('#resultTitle').textContent = title;
+    $('#resultMessage').textContent = r.timedOut ? `Time is up! ${message}` : message;
+    $('#resTotal').textContent = r.total;
+    $('#resCorrect').textContent = r.correct;
+    $('#resIncorrect').textContent = r.incorrect;
+    $('#resUnanswered').textContent = r.unanswered;
+    $('#resTime').textContent = formatTime(r.seconds);
+    $('#scorePercent').textContent = `${r.percent}%`;
+    const ring = $('#scoreRing');
+    ring.style.setProperty('--ring', r.percent >= 70 ? 'var(--ok)' : r.percent >= 50 ? 'var(--warn)' : 'var(--bad)');
+    ring.style.setProperty('--pct', 0);
+    requestAnimationFrame(() => requestAnimationFrame(() => ring.style.setProperty('--pct', r.percent)));
+  }
+
+  /* ---------- History ---------- */
+  function loadHistory() {
+    const data = store.read(STORAGE_KEYS.history, []);
+    return Array.isArray(data) ? data : [];
+  }
+
+  function saveResult(entry) {
+    store.write(STORAGE_KEYS.history, [entry, ...loadHistory()].slice(0, MAX_HISTORY));
+    updateStats();
+  }
+
+  function renderHistory() {
+    const history = loadHistory();
+    const list = $('#historyList');
+    const summary = $('#historySummary');
+    list.innerHTML = '';
+    summary.innerHTML = '';
+    $('#clearHistoryBtn').disabled = history.length === 0;
+
+    if (history.length === 0) {
+      list.innerHTML = '<div class="empty"><strong>No quizzes yet</strong><br>Finish a quiz and your score will appear here.</div>';
+      return;
+    }
+    const best = Math.max(...history.map((h) => h.percent));
+    const average = Math.round(history.reduce((sum, h) => sum + h.percent, 0) / history.length);
+    [`Attempts: ${history.length}`, `Best: ${best}%`, `Average: ${average}%`].forEach((text) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = text;
+      summary.appendChild(chip);
+    });
+
+    history.forEach((h) => {
+      const row = document.createElement('div');
+      row.className = 'history-item';
+      row.innerHTML = '<h3></h3><div class="score-badge"></div><small></small>';
+      row.querySelector('h3').innerHTML = `${ico(CATEGORY_META[h.category]?.icon || 'mix')}<span></span>`;
+      row.querySelector('h3 span').textContent = h.category;
+      const badge = row.querySelector('.score-badge');
+      badge.textContent = `${h.correct}/${h.total} · ${h.percent}%`;
+      badge.classList.add(h.percent >= 70 ? 'good' : h.percent < 50 ? 'low' : 'mid');
+      const date = new Date(h.date);
+      row.querySelector('small').textContent =
+        `${isNaN(date) ? '' : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} · ${h.difficulty && h.difficulty !== 'All' ? h.difficulty : 'All levels'} · ${formatTime(h.seconds)}`;
+      list.appendChild(row);
+    });
+  }
+
+  async function clearHistory() {
+    if (await confirmAction('Delete all saved quiz results? This cannot be undone.', 'Clear history')) {
+      store.write(STORAGE_KEYS.history, []);
+      updateStats();
+      renderHistory();
+    }
+  }
+
+  /* ---------- Event wiring ---------- */
+  function bindEvents() {
+    $$('[data-nav]').forEach((el) => el.addEventListener('click', () => navigate(el.dataset.nav)));
+    $('#startBtn').addEventListener('click', () => navigate('categories'));
+    $('#prevBtn').addEventListener('click', goPrevious);
+    $('#nextBtn').addEventListener('click', goNext);
+    $('#restartBtn').addEventListener('click', restartActiveQuiz);
+    $('#retryBtn').addEventListener('click', () => startQuiz(lastCategory, lastDifficulty));
+    $('#clearHistoryBtn').addEventListener('click', clearHistory);
+    $('#themeToggle').addEventListener('click', () => { prefs.theme = prefs.theme === 'dark' ? 'light' : 'dark'; applyPrefs(); });
+    $('#soundToggle').addEventListener('click', () => { prefs.muted = !prefs.muted; applyPrefs(); });
+    $('#navToggle').addEventListener('click', () => {
+      const open = $('#navMenu').classList.toggle('open');
+      $('#navToggle').setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!isQuizActive() || $('#confirmDialog').open) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= 4) { const text = quiz.questions[quiz.index].options[n - 1]; if (text) selectAnswer(text); }
+      else if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') goPrevious();
+    });
+    // Warn before closing the tab in the middle of a quiz
+    window.addEventListener('beforeunload', (e) => { if (isQuizActive()) { e.preventDefault(); e.returnValue = ''; } });
+  }
+
+  /* ---------- Background: floating symbols + particles ---------- */
+  function initBackground() {
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const glyphs = ['∑', 'π', '∫', '√', '∞', '{ }', '</>', 'λ', '≠', '±', '01', '=>', '( )', '%', '#', 'x²'];
+    const layer = $('#symbols');
+    glyphs.forEach((glyph, i) => {
+      const el = document.createElement('span');
+      el.textContent = glyph;
+      el.style.cssText = `left:${(i * 37 + 8) % 94}%;top:${(i * 53 + 12) % 88}%;font-size:${16 + (i * 7) % 26}px;animation-delay:${-i * 3.1}s;animation-duration:${26 + (i * 5) % 18}s`;
+      layer.appendChild(el);
+    });
+    const canvas = $('#particles');
+    const ctx = canvas.getContext && canvas.getContext('2d');
+    if (!ctx) return;
+    let width, height, dots = [], frame;
+    const resize = () => {
+      width = canvas.width = innerWidth; height = canvas.height = innerHeight;
+      dots = Array.from({ length: Math.min(60, Math.round(width * height / 26000)) }, () => ({
+        x: Math.random() * width, y: Math.random() * height, r: Math.random() * 1.6 + 0.4,
+        vx: (Math.random() - 0.5) * 0.18, vy: -Math.random() * 0.25 - 0.05,
+        color: Math.random() < 0.5 ? '167,139,250' : '34,211,238', alpha: Math.random() * 0.5 + 0.2
+      }));
+    };
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      dots.forEach((d) => {
+        d.x += d.vx; d.y += d.vy;
+        if (d.y < -5) { d.y = height + 5; d.x = Math.random() * width; }
+        if (d.x < -5) d.x = width + 5; else if (d.x > width + 5) d.x = -5;
+        ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${d.color},${d.alpha})`; ctx.fill();
+      });
+    };
+    const loop = () => { draw(); frame = requestAnimationFrame(loop); };
+    resize();
+    addEventListener('resize', resize);
+    if (reduceMotion) { draw(); return; }
+    loop();
+    document.addEventListener('visibilitychange', () => { cancelAnimationFrame(frame); if (!document.hidden) loop(); });
+  }
+
+  applyPrefs();
+  renderCategories();
+  updateStats();
+  bindEvents();
+  initBackground();
+})();
+
+
+</script>
+</body>
+</html>
